@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Zeynep'in Dolabı</title>
+<style>
+  :root{
+    --cream:#fdf6f0;
+    --plum:#5b3a4d;
+    --pink:#ff6f91;
+    --pink-soft:#ffd6e0;
+    --lilac:#c9a8e0;
+    --gold:#e8b84b;
+    --panel:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    background:var(--cream);
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    color:var(--plum);
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior:none;
+  }
+  .wrap{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    padding:18px 14px 40px;
+  }
+  header{
+    text-align:center;
+    margin-bottom:10px;
+  }
+  header h1{
+    font-family: 'Brush Script MT', cursive, 'Trebuchet MS';
+    font-size:2.4rem;
+    margin:6px 0 0;
+    color:var(--pink);
+    text-shadow: 2px 2px 0 var(--pink-soft);
+    letter-spacing:1px;
+  }
+  header p{
+    margin:2px 0 0;
+    font-size:0.85rem;
+    color:var(--lilac);
+    font-weight:bold;
+    letter-spacing:2px;
+    text-transform:uppercase;
+  }
+
+  .stage{
+    position:relative;
+    border-radius:24px;
+    padding:0;
+    margin:14px 0;
+    box-shadow: 0 8px 0 rgba(0,0,0,0.06), 0 10px 24px rgba(91,58,77,0.15);
+    border: 3px solid #fff;
+    overflow:hidden;
+  }
+  .stage-inner{
+    position:relative;
+    width:100%;
+    aspect-ratio: 3 / 4;
+  }
+  .bg-layer, .doll-layer{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+  }
+  .bg-layer svg, .doll-layer svg{width:100%;height:100%;display:block;}
+  .doll-layer{pointer-events:none;}
+
+  .randomize{
+    display:block;
+    margin:14px auto 0;
+    background:var(--gold);
+    color:#fff;
+    border:none;
+    border-radius:999px;
+    padding:10px 22px;
+    font-weight:bold;
+    font-size:0.95rem;
+    box-shadow:0 4px 0 #c99730;
+  }
+  .randomize:active{transform:translateY(2px); box-shadow:0 1px 0 #c99730;}
+
+  .panel{
+    background:var(--panel);
+    border-radius:20px;
+    padding:14px 16px 6px;
+    margin-top:14px;
+    box-shadow: 0 3px 10px rgba(91,58,77,0.08);
+  }
+  .panel h2{
+    font-size:1rem;
+    margin:0 0 10px;
+    color:var(--plum);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .panel h2 .tag{
+    font-size:0.65rem;
+    background:var(--pink-soft);
+    color:var(--pink);
+    padding:2px 8px;
+    border-radius:10px;
+    font-weight:bold;
+  }
+  .swatches{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .swatch{
+    aspect-ratio:1/1;
+    border-radius:50%;
+    border:3px solid #fff;
+    box-shadow:0 2px 6px rgba(0,0,0,0.15);
+    cursor:pointer;
+    position:relative;
+    transition: transform 0.12s ease;
+  }
+  .swatch:active{transform:scale(0.92);}
+  .swatch.selected{
+    outline:3px solid var(--plum);
+    outline-offset:2px;
+  }
+  .swatch.selected::after{
+    content:'✓';
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#fff;
+    font-weight:bold;
+    text-shadow:0 1px 2px rgba(0,0,0,0.4);
+    font-size:1.1rem;
+  }
+
+  .scene-grid{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:8px;
+    margin-bottom:16px;
+  }
+  .scene-btn{
+    aspect-ratio:1/1;
+    border-radius:14px;
+    border:3px solid #fff;
+    box-shadow:0 2px 6px rgba(0,0,0,0.15);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1.3rem;
+    position:relative;
+  }
+  .scene-btn.selected{
+    outline:3px solid var(--plum);
+    outline-offset:2px;
+  }
+  .scene-label{
+    display:block;
+    text-align:center;
+    font-size:0.55rem;
+    margin-top:3px;
+    color:var(--plum);
+    font-weight:bold;
+  }
+  .scene-item{display:flex;flex-direction:column;align-items:center;}
+
+  footer{
+    text-align:center;
+    margin-top:22px;
+    font-size:0.75rem;
+    color:var(--lilac);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p>Giydirme Oyunu</p>
+    <h1>Zeynep'in Dolabı</h1>
+  </header>
+
+  <div class="stage">
+    <div class="stage-inner">
+      <div class="bg-layer" id="bgLayer"></div>
+      <div class="doll-layer">
+        <svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
+          <!-- Soft ground shadow -->
+          <ellipse cx="150" cy="385" rx="70" ry="10" fill="#000" opacity="0.10"/>
+
+          <!-- Legs -->
+          <rect x="128" y="270" width="18" height="90" rx="9" fill="#f7d9bd"/>
+          <rect x="154" y="270" width="18" height="90" rx="9" fill="#f7d9bd"/>
+
+          <!-- Shoes -->
+          <g id="shoeLeft"><ellipse cx="137" cy="362" rx="16" ry="9" fill="#ff6f91"/></g>
+          <g id="shoeRight"><ellipse cx="163" cy="362" rx="16" ry="9" fill="#ff6f91"/></g>
+
+          <!-- Arms -->
+          <rect x="95" y="150" width="16" height="80" rx="8" fill="#f7d9bd" transform="rotate(8 103 150)"/>
+          <rect x="189" y="150" width="16" height="80" rx="8" fill="#f7d9bd" transform="rotate(-8 197 150)"/>
+
+          <!-- Dress -->
+          <path id="dress" d="M 118 150 C 110 200, 90 250, 85 275 L 215 275 C 210 250, 190 200, 182 150 Z" fill="#c9a8e0"/>
+          <path d="M 128 150 L 172 150 L 178 175 L 122 175 Z" fill="#000" opacity="0.05"/>
+
+          <!-- Neck -->
+          <rect x="140" y="130" width="20" height="25" fill="#f7d9bd"/>
+
+          <!-- Head -->
+          <circle cx="150" cy="100" r="42" fill="#f7d9bd"/>
+
+          <!-- Hair back strands (behind everything, flowing past shoulders) -->
+          <path d="M 106 90
+                   C 92 108, 96 132, 88 152
+                   C 82 170, 88 190, 102 208
+                   C 110 188, 105 156, 112 130
+                   C 116 112, 112 100, 106 90 Z" fill="#7a4a2b"/>
+          <path d="M 194 90
+                   C 208 108, 204 132, 212 152
+                   C 218 170, 212 190, 198 208
+                   C 190 188, 195 156, 188 130
+                   C 184 112, 188 100, 194 90 Z" fill="#7a4a2b"/>
+
+          <!-- Face -->
+          <circle cx="135" cy="100" r="4" fill="#5b3a4d"/>
+          <circle cx="165" cy="100" r="4" fill="#5b3a4d"/>
+          <path d="M 138 118 Q 150 126 162 118" stroke="#c9576f" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <circle cx="122" cy="112" r="6" fill="#ff9eb5" opacity="0.6"/>
+          <circle cx="178" cy="112" r="6" fill="#ff9eb5" opacity="0.6"/>
+
+          <!-- Hair top / bangs (in front, over forehead edge) -->
+          <path d="M 104 96
+                   C 98 58, 126 36, 150 36
+                   C 174 36, 202 58, 196 96
+                   C 190 76, 172 62, 150 62
+                   C 128 62, 110 76, 104 96 Z" fill="#7a4a2b"/>
+          <!-- side-swept bangs detail -->
+          <path d="M 112 66 C 122 58, 136 54, 150 54" stroke="#663e24" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
+
+          <!-- Fixed pink ribbon (does not change color) -->
+          <g id="ribbon" transform="translate(122,58) rotate(-12)">
+            <path d="M -2 0 C -16 -12, -22 4, -8 4 C -18 10, -10 20, -2 8 Z" fill="#ff6f91" stroke="#e0507a" stroke-width="1"/>
+            <path d="M 2 0 C 16 -12, 22 4, 8 4 C 18 10, 10 20, 2 8 Z" fill="#ff6f91" stroke="#e0507a" stroke-width="1"/>
+            <circle cx="0" cy="4" r="4.5" fill="#e0507a"/>
+            <path d="M -2 8 L -6 22 L 0 16 Z" fill="#ff6f91"/>
+            <path d="M 2 8 L 6 22 L 0 16 Z" fill="#ff6f91"/>
+          </g>
+
+          <!-- Bag -->
+          <g id="bagGroup" transform="translate(198,205)">
+            <path d="M -10 0 C -10 -14, 10 -14, 10 0" stroke="#5b3a4d" stroke-width="3" fill="none"/>
+            <rect id="bag" x="-16" y="0" width="32" height="26" rx="6" fill="#e8b84b"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <button class="randomize" onclick="randomize()">🎲 Şansına Bırak</button>
+
+  <div class="panel">
+    <h2>Sahne <span class="tag">5 mekan</span></h2>
+    <div class="scene-grid" id="sceneGrid"></div>
+
+    <h2>Kıyafet <span class="tag">10 renk</span></h2>
+    <div class="swatches" id="clothesSwatches"></div>
+
+    <h2>Ayakkabı <span class="tag">5 renk</span></h2>
+    <div class="swatches" id="shoesSwatches"></div>
+
+    <h2>Çanta <span class="tag">5 renk</span></h2>
+    <div class="swatches" id="bagsSwatches"></div>
+  </div>
+
+  <footer>Zeynep'in Dolabı — kombinini ve mekanını seç, eğlen ✨</footer>
+</div>
+
+<script>
+  const clothesColors = ['#c9a8e0','#ff6f91','#ff9776','#ffd166','#7ee0c0','#6fb1ff','#f45b8d','#a3d977','#4a4e69','#ffffff'];
+  const shoeColors = ['#ff6f91','#e8b84b','#6fb1ff','#a3d977','#4a4e69'];
+  const bagColors  = ['#e8b84b','#ff6f91','#c9a8e0','#4a4e69','#6fb1ff'];
+
+  const scenes = [
+    { key:'cafe', emoji:'☕', label:'Kafe', svg: `
+      <svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
+        <rect width="300" height="400" fill="#f6e3d3"/>
+        <rect x="0" y="0" width="300" height="230" fill="#f2d3c0"/>
+        <rect x="0" y="60" width="300" height="30" fill="#e8846a"/>
+        <rect x="0" y="60" width="300" height="30" fill="url(#stripes)" />
+        <defs>
+          <pattern id="stripes" width="30" height="30" patternUnits="userSpaceOnUse">
+            <rect width="15" height="30" fill="#fff" opacity="0.35"/>
+          </pattern>
+        </defs>
+        <rect x="20" y="90" width="80" height="90" rx="4" fill="#fffaf3" opacity="0.6"/>
+        <rect x="200" y="90" width="80" height="90" rx="4" fill="#fffaf3" opacity="0.6"/>
+        <circle cx="60" cy="120" r="4" fill="#e8b84b"/>
+        <circle cx="240" cy="120" r="4" fill="#e8b84b"/>
+        <rect x="0" y="230" width="300" height="170" fill="#d9a679"/>
+        <ellipse cx="150" cy="340" rx="55" ry="14" fill="#c48f5e"/>
+        <rect x="140" y="300" width="20" height="42" fill="#8a5a34"/>
+        <ellipse cx="150" cy="300" rx="45" ry="12" fill="#efd9b8"/>
+        <ellipse cx="150" cy="288" rx="16" ry="10" fill="#fff"/>
+        <rect x="140" y="278" width="20" height="12" fill="#c9576f"/>
+      </svg>`},
+    { key:'street', emoji:'🏙️', label:'Sokak', svg: `
+      <svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
+        <rect width="300" height="400" fill="#cfe0ea"/>
+        <rect x="0" y="0" width="300" height="230" fill="#cfe0ea"/>
+        <rect x="10" y="80" width="70" height="150" fill="#b8c9d6"/>
+        <rect x="90" y="50" width="80" height="180" fill="#a9bcca"/>
+        <rect x="180" y="90" width="60" height="140" fill="#c2d2de"/>
+        <rect x="250" y="70" width="45" height="160" fill="#b0c2d0"/>
+        <g fill="#7d93a3">
+          <rect x="20" y="100" width="14" height="14"/><rect x="45" y="100" width="14" height="14"/>
+          <rect x="20" y="130" width="14" height="14"/><rect x="45" y="130" width="14" height="14"/>
+          <rect x="105" y="70" width="14" height="14"/><rect x="135" y="70" width="14" height="14"/>
+          <rect x="105" y="100" width="14" height="14"/><rect x="135" y="100" width="14" height="14"/>
+          <rect x="195" y="110" width="14" height="14"/><rect x="215" y="110" width="14" height="14"/>
+        </g>
+        <rect x="0" y="230" width="300" height="170" fill="#8a8f98"/>
+        <rect x="0" y="230" width="300" height="10" fill="#6d7178"/>
+        <rect x="140" y="250" width="6" height="120" fill="#5b3a4d" opacity="0"/>
+        <line x1="0" y1="300" x2="120" y2="300" stroke="#e8d94f" stroke-width="4" stroke-dasharray="14 10"/>
+        <line x1="180" y1="300" x2="300" y2="300" stroke="#e8d94f" stroke-width="4" stroke-dasharray="14 10"/>
+        <rect x="252" y="230" width="8" height="60" fill="#3d3d3d"/>
+        <circle cx="256" cy="222" r="12" fill="#fff4c2"/>
+      </svg>`},
+    { key:'zoo', emoji:'🦒', label:'Hayvanat B.', svg: `
+      <svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
+        <rect width="300" height="400" fill="#bfe6d4"/>
+        <circle cx="245" cy="60" r="30" fill="#ffe27a"/>
+        <rect x="0" y="230" width="300" height="170" fill="#8fcf8a"/>
+        <ellipse cx="150" cy="230" rx="160" ry="18" fill="#7fc07a"/>
+        <g opacity="0.9">
+          <rect x="30" y="150" width="10" height="70" fill="#8a5a34"/>
+          <circle cx="35" cy="140" r="30" fill="#4f9e5c"/>
+          <rect x="260" y="160" width="10" height="60" fill="#8a5a34"/>
+          <circle cx="265" cy="150" r="26" fill="#4f9e5c"/>
+        </g>
+        <g transform="translate(175,150)">
+          <rect x="-8" y="40" width="10" height="70" fill="#e8b84b"/>
+          <rect x="10" y="40" width="10" height="70" fill="#e8b84b"/>
+          <rect x="-14" y="-20" width="34" height="65" rx="8" fill="#f0c778"/>
+          <rect x="-6" y="-55" width="16" height="45" rx="6" fill="#f0c778"/>
+          <circle cx="2" cy="-60" r="10" fill="#f0c778"/>
+          <rect x="-2" y="-72" width="3" height="10" fill="#7a4a2b"/>
+          <rect x="6" y="-72" width="3" height="10" fill="#7a4a2b"/>
+          <circle cx="0" cy="-1" r="2" fill="#7a4a2b"/><circle cx="8" cy="10" r="2" fill="#7a4a2b"/>
+          <circle cx="-4" cy="20" r="2" fill="#7a4a2b"/><circle cx="12" cy="35" r="2" fill="#7a4a2b"/>
+        </g>
+      </svg>`},
+    { key:'park', emoji:'🌳', label:'Park', svg: `
+      <svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
+        <rect width="300" height="400" fill="#cdeefc"/>
+        <circle cx="60" cy="60" r="28" fill="#ffe27a"/>
+        <rect x="0" y="240" width="300" height="160" fill="#8fcf8a"/>
+        <ellipse cx="150" cy="240" rx="160" ry="16" fill="#7fc07a"/>
+        <g>
+          <rect x="215" y="170" width="12" height="80" fill="#8a5a34"/>
+          <circle cx="221" cy="150" r="38" fill="#4f9e5c"/>
+          <rect x="55" y="190" width="10" height="60" fill="#8a5a34"/>
+          <circle cx="60" cy="170" r="30" fill="#5db06a"/>
+        </g>
+        <g transform="translate(150,300)">
+          <rect x="-40" y="0" width="80" height="10" fill="#8a5a34"/>
+          <rect x="-36" y="10" width="8" height="24" fill="#5b3a4d"/>
+          <rect x="28" y="10" width="8" height="24" fill="#5b3a4d"/>
+          <rect x="-40" y="-14" width="80" height="8" fill="#a06b3f"/>
+        </g>
+      </svg>`},
+    { key:'concert', emoji:'🎤', label:'Konser', svg: `
+      <svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
+        <rect width="300" height="400" fill="#241b3a"/>
+        <polygon points="60,0 0,240 120,240" fill="#ff6f91" opacity="0.25"/>
+        <polygon points="150,0 90,240 210,240" fill="#6fb1ff" opacity="0.22"/>
+        <polygon points="240,0 180,240 300,240" fill="#e8b84b" opacity="0.2"/>
+        <rect x="0" y="230" width="300" height="20" fill="#150f24"/>
+        <g fill="#150f24">
+          <path d="M0 400 L0 320 Q15 300 30 320 Q45 300 60 320 Q75 300 90 320 Q105 300 120 320 Q135 300 150 320 Q165 300 180 320 Q195 300 210 320 Q225 300 240 320 Q255 300 270 320 Q285 300 300 320 L300 400 Z"/>
+        </g>
+        <circle cx="70" cy="90" r="5" fill="#fff4c2"/>
+        <circle cx="140" cy="60" r="4" fill="#ff9eb5"/>
+        <circle cx="200" cy="100" r="5" fill="#7ee0c0"/>
+        <circle cx="250" cy="70" r="4" fill="#fff4c2"/>
+        <circle cx="30" cy="130" r="3" fill="#ffd166"/>
+      </svg>`}
+  ];
+
+  let state = { dress: 0, shoe: 0, bag: 0, scene: 0 };
+
+  function buildSwatches(containerId, colors, key, applyFn){
+    const el = document.getElementById(containerId);
+    el.innerHTML = '';
+    colors.forEach((c, i) => {
+      const div = document.createElement('div');
+      div.className = 'swatch' + (state[key] === i ? ' selected' : '');
+      div.style.background = c;
+      div.onclick = () => { state[key] = i; applyState(); buildAll(); };
+      el.appendChild(div);
+    });
+  }
+
+  function buildScenes(){
+    const el = document.getElementById('sceneGrid');
+    el.innerHTML = '';
+    scenes.forEach((s, i) => {
+      const item = document.createElement('div');
+      item.className = 'scene-item';
+      const btn = document.createElement('div');
+      btn.className = 'scene-btn' + (state.scene === i ? ' selected' : '');
+      btn.style.background = '#fdf6f0';
+      btn.textContent = s.emoji;
+      btn.onclick = () => { state.scene = i; setScene(); buildScenes(); };
+      const label = document.createElement('span');
+      label.className = 'scene-label';
+      label.textContent = s.label;
+      item.appendChild(btn);
+      item.appendChild(label);
+      el.appendChild(item);
+    });
+  }
+
+  function setScene(){
+    document.getElementById('bgLayer').innerHTML = scenes[state.scene].svg;
+  }
+
+  function buildAll(){
+    buildSwatches('clothesSwatches', clothesColors, 'dress');
+    buildSwatches('shoesSwatches', shoeColors, 'shoe');
+    buildSwatches('bagsSwatches', bagColors, 'bag');
+  }
+
+  function applyState(){
+    document.getElementById('dress').setAttribute('fill', clothesColors[state.dress]);
+    document.getElementById('shoeLeft').firstElementChild.setAttribute('fill', shoeColors[state.shoe]);
+    document.getElementById('shoeRight').firstElementChild.setAttribute('fill', shoeColors[state.shoe]);
+    document.getElementById('bag').setAttribute('fill', bagColors[state.bag]);
+  }
+
+  function randomize(){
+    state.dress = Math.floor(Math.random()*clothesColors.length);
+    state.shoe = Math.floor(Math.random()*shoeColors.length);
+    state.bag = Math.floor(Math.random()*bagColors.length);
+    state.scene = Math.floor(Math.random()*scenes.length);
+    applyState();
+    buildAll();
+    setScene();
+    buildScenes();
+  }
+
+  buildAll();
+  applyState();
+  buildScenes();
+  setScene();
+</script>
+</body>
+</html>
